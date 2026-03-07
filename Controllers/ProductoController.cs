@@ -100,9 +100,9 @@ namespace Inventario.Controllers
 
                 return View(producto);
             }
-            catch
+            catch (Exception ex)
             {
-                ViewBag.MensajeProceso = "Error al crear el producto";
+                ViewBag.MensajeProceso = ex.InnerException?.InnerException?.Message ?? ex.Message;
                 ViewBag.ValorMensaje = 0;
 
                 return View(producto);
@@ -112,77 +112,96 @@ namespace Inventario.Controllers
         // GET: Producto/Edit/5
         public ActionResult Edit(int id)
         {
-            try
+            using (var db = new InventarioContext())
             {
-                Producto producto = new Producto();
+                var producto = db.Productos.Find(id);
 
-                using (var db = new InventarioContext())
+                if (producto == null)
                 {
-                    var productoDB = db.Productos.FirstOrDefault(p => p.Id == id);
-
-                    if (productoDB != null)
-                    {
-                        producto.Id = productoDB.Id;
-                        producto.Nombre = productoDB.Nombre;
-                        producto.Descripcion = productoDB.Descripcion;
-                        producto.Precio = productoDB.Precio;
-                        producto.Stock = productoDB.Stock;
-                    }
-
-                    return View(producto);
+                    return HttpNotFound();
                 }
-            }
-            catch (Exception ex)
-            {
-                return View("Error", new HandleErrorInfo(ex, "Producto", "Edit"));
+
+                var model = new EditViewModel
+                {
+                    Id = producto.Id,
+                    Nombre = producto.Nombre,
+                    Descripcion = producto.Descripcion,
+                    Precio = producto.Precio,
+                    Stock = producto.Stock
+                };
+
+                return View(model);
             }
         }
 
         // POST: Producto/Edit/5
         [HttpPost]
-        public ActionResult Edit(int id, EditViewModel producto)
+        [ValidateAntiForgeryToken]
+        public ActionResult Edit(EditViewModel model)
         {
             try
             {
                 if (!ModelState.IsValid)
                 {
-                    return View(producto);
+                    return View(model);
                 }
 
                 using (var db = new InventarioContext())
                 {
-                    var productoDB = db.Productos.FirstOrDefault(p => p.Id == producto.Id);
+                    var producto = db.Productos.Find(model.Id);
 
-                    if (productoDB != null)
+                    if (producto == null)
                     {
-                        productoDB.Nombre = producto.Nombre;
-                        productoDB.Descripcion = producto.Descripcion;
-                        productoDB.Precio = producto.Precio;
-                        productoDB.Stock = producto.Stock;
-
-                        db.Entry(productoDB).State = System.Data.Entity.EntityState.Modified;
-                        db.SaveChanges();
-
-                        ViewBag.MensajeProceso = "Producto editado exitosamente";
-                        ViewBag.ValorMensaje = 1;
+                        return HttpNotFound();
                     }
 
-                    return View(producto);
+                    producto.Nombre = model.Nombre;
+                    producto.Descripcion = model.Descripcion;
+                    producto.Precio = model.Precio;
+                    producto.Stock = model.Stock;
+
+                    db.SaveChanges();
                 }
+
+                return RedirectToAction("Index");
             }
-            catch
+            catch (Exception ex)
             {
-                ViewBag.MensajeProceso = "Error al editar el producto";
+                ViewBag.MensajeProceso = ex.Message;
                 ViewBag.ValorMensaje = 0;
 
-                return View(producto);
+                return View(model);
             }
         }
 
         // GET: Producto/Delete/5
         public ActionResult Delete(int id)
         {
-            return View();
+            try
+            {
+                using (var db = new InventarioContext())
+                {
+                    var productoDB = db.Productos.FirstOrDefault(p => p.Id == id);
+
+                    if (productoDB == null)
+                        return HttpNotFound();
+
+                    var producto = new Producto
+                    {
+                        Id = productoDB.Id,
+                        Nombre = productoDB.Nombre,
+                        Descripcion = productoDB.Descripcion,
+                        Precio = productoDB.Precio,
+                        Stock = productoDB.Stock
+                    };
+
+                    return View(producto);
+                }
+            }
+            catch (Exception ex)
+            {
+                return View("Error", new HandleErrorInfo(ex, "Producto", "Delete"));
+            }
         }
 
         // POST: Producto/Delete/5

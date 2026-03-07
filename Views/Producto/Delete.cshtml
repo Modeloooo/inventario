@@ -1,0 +1,62 @@
+﻿@model Inventario.Models.Producto
+
+@{
+    ViewBag.Title = "Eliminar producto";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<div class="page-header">
+    <div>
+        <h1>Eliminar producto</h1>
+        <p class="subtitle">Esta acción no se puede deshacer</p>
+    </div>
+    <a href="@Url.Action("Index")" class="btn btn-ghost">Cancelar</a>
+</div>
+
+<div class="card" style="padding:2rem;max-width:560px;">
+
+    <div style="display:flex;align-items:flex-start;gap:1rem;margin-bottom:1.75rem;">
+        <div style="width:44px;height:44px;border-radius:50%;background:#fdeaea;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:1.2rem;">
+            &#9888;
+        </div>
+        <div>
+            <p style="font-weight:600;margin-bottom:.25rem;">
+                ¿Eliminar <em>@Model.Nombre</em>?
+            </p>
+            <p style="font-size:.875rem;color:var(--muted);">
+                Se eliminará permanentemente este producto del inventario.
+                No hay forma de recuperar la información una vez eliminada.
+            </p>
+        </div>
+    </div>
+
+    <div style="background:var(--cream);border-radius:var(--radius);padding:1rem 1.25rem;margin-bottom:1.75rem;">
+        <div class="detail-grid" style="gap:.75rem 2rem;">
+            <div class="detail-field">
+                <span class="detail-label">ID</span>
+                <span class="detail-value">#@Model.Id</span>
+            </div>
+            <div class="detail-field">
+                <span class="detail-label">Nombre</span>
+                <span class="detail-value">@Model.Nombre</span>
+            </div>
+            <div class="detail-field">
+                <span class="detail-label">Precio</span>
+                <span class="detail-value">$@Model.Precio.ToString("N2")</span>
+            </div>
+            <div class="detail-field">
+                <span class="detail-label">Stock</span>
+                <span class="detail-value">@Model.Stock unidades</span>
+            </div>
+        </div>
+    </div>
+
+    @using (Html.BeginForm("Delete", "Producto", new { id = Model.Id }, FormMethod.Post))
+    {
+        @Html.AntiForgeryToken()
+        <div style="display:flex;gap:.5rem;">
+            <button type="submit" class="btn btn-danger">Sí, eliminar</button>
+            <a href="@Url.Action("Details", new { id = Model.Id })" class="btn btn-secondary">No, cancelar</a>
+        </div>
+    }
+</div>
